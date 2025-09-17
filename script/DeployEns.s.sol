@@ -2,18 +2,20 @@
 pragma solidity ^0.8.13;
 
 import {Script, console} from "forge-std/Script.sol";
-import {Counter} from "../src/Counter.sol";
+import {Ens} from "../src/Ens.sol";
 
-contract CounterScript is Script {
-    Counter public counter;
+contract DeployEns is Script {
+    Ens public ens;
 
     function setUp() public {}
 
-    function run() public {
+    function run() public returns (Ens) {
         vm.startBroadcast();
 
-        counter = new Counter();
+        ens = new Ens();
 
         vm.stopBroadcast();
+
+        return ens;
     }
 }
