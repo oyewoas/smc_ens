@@ -31,24 +31,24 @@ contract Ens {
     // State variables
     mapping(string => NameRecord) public nameRecords;
     mapping(address => string[]) public ownerToNames;
-    
+
     address public contractOwner;
 
     // Modifiers
     modifier onlyNameOwner(string memory name) {
-        if(!nameRecords[name].exists) revert NameNotFound(name);
-        if(nameRecords[name].owner != msg.sender) revert NotNameOwner(name, msg.sender);
+        if (!nameRecords[name].exists) revert NameNotFound(name);
+        if (nameRecords[name].owner != msg.sender) revert NotNameOwner(name, msg.sender);
         _;
     }
 
     modifier onlyContractOwner() {
-        if(msg.sender != contractOwner) revert Unauthorized(msg.sender);
+        if (msg.sender != contractOwner) revert Unauthorized(msg.sender);
         _;
     }
 
     modifier validName(string memory name) {
-        if(bytes(name).length == 0) revert NameEmpty();
-        if(bytes(name).length > 64) revert NameTooLong(name);
+        if (bytes(name).length == 0) revert NameEmpty();
+        if (bytes(name).length > 64) revert NameTooLong(name);
         _;
     }
 
@@ -62,14 +62,13 @@ contract Ens {
      * @param imageHash IPFS hash of the image from Pinata
      * @param targetAddress The Ethereum address to resolve to
      */
-    function registerName(
-        string memory name,
-        string memory imageHash,
-        address targetAddress
-    ) external validName(name) {
-        if(nameRecords[name].exists) revert NameAlreadyRegistered(name);
-        if(targetAddress == address(0)) revert InvalidAddress(targetAddress);
-        if(bytes(imageHash).length == 0) revert InvalidImageHash(imageHash);
+    function registerName(string memory name, string memory imageHash, address targetAddress)
+        external
+        validName(name)
+    {
+        if (nameRecords[name].exists) revert NameAlreadyRegistered(name);
+        if (targetAddress == address(0)) revert InvalidAddress(targetAddress);
+        if (bytes(imageHash).length == 0) revert InvalidImageHash(imageHash);
 
         // Create the name record
         nameRecords[name] = NameRecord({
@@ -92,8 +91,8 @@ contract Ens {
      * @param newAddress The new address to resolve to
      */
     function updateAddress(string memory name, address newAddress) external onlyNameOwner(name) {
-        if(newAddress == address(0)) revert InvalidAddress(newAddress);
-        
+        if (newAddress == address(0)) revert InvalidAddress(newAddress);
+
         nameRecords[name].resolvedAddress = newAddress;
         emit NameUpdated(name, newAddress, nameRecords[name].imageHash);
     }
@@ -104,8 +103,8 @@ contract Ens {
      * @param newImageHash The new IPFS hash
      */
     function updateImage(string memory name, string memory newImageHash) external onlyNameOwner(name) {
-        if(bytes(newImageHash).length == 0) revert InvalidImageHash(newImageHash);
-        
+        if (bytes(newImageHash).length == 0) revert InvalidImageHash(newImageHash);
+
         nameRecords[name].imageHash = newImageHash;
         emit NameUpdated(name, nameRecords[name].resolvedAddress, newImageHash);
     }
@@ -116,15 +115,15 @@ contract Ens {
      * @param newOwner The new owner address
      */
     function transferName(string memory name, address newOwner) external onlyNameOwner(name) {
-        if(newOwner == address(0)) revert InvalidAddress(newOwner);
-        if(newOwner == nameRecords[name].owner) revert AlreadyOwner(name, newOwner);
+        if (newOwner == address(0)) revert InvalidAddress(newOwner);
+        if (newOwner == nameRecords[name].owner) revert AlreadyOwner(name, newOwner);
 
         address oldOwner = nameRecords[name].owner;
         nameRecords[name].owner = newOwner;
 
         // Remove from old owner's list
         _removeNameFromOwner(oldOwner, name);
-        
+
         // Add to new owner's list
         ownerToNames[newOwner].push(name);
 
@@ -139,14 +138,13 @@ contract Ens {
      * @return imageHash The IPFS hash of the associated image
      * @return registrationTime When the name was registered
      */
-    function resolveName(string memory name) external view returns (
-        address owner,
-        address resolvedAddress,
-        string memory imageHash,
-        uint256 registrationTime
-    ) {
-        if(!nameRecords[name].exists) revert NameDoesNotExist(name);
-        
+    function resolveName(string memory name)
+        external
+        view
+        returns (address owner, address resolvedAddress, string memory imageHash, uint256 registrationTime)
+    {
+        if (!nameRecords[name].exists) revert NameDoesNotExist(name);
+
         NameRecord memory record = nameRecords[name];
         return (record.owner, record.resolvedAddress, record.imageHash, record.registrationTime);
     }
